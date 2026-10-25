@@ -132,6 +132,53 @@ section{padding:76px 0 8px}
 .pcard .foot .arrow{margin-left:auto;opacity:0;transition:opacity .18s,transform .18s;color:var(--accent)}
 .pcard:hover .arrow{opacity:1;transform:translateX(3px)}
 
+/* ---------- 能力地图 ---------- */
+.tier{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:4px;margin-left:auto;white-space:nowrap}
+.tier.t1{color:var(--ok);border:1px solid rgba(63,191,127,.35)}
+.tier.t2{color:var(--warn);border:1px solid rgba(229,169,78,.35)}
+.tier.t3{color:var(--accent);border:1px solid rgba(69,214,192,.35)}
+.skill-card .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.skill-card .chip{font-family:var(--mono);font-size:10.5px;color:var(--text2);border:1px solid var(--line2);border-radius:5px;padding:3px 8px;background:var(--bg2)}
+.dive{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;margin-top:20px}
+.dive .box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 22px}
+.dive .box .b-t{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.05em;margin-bottom:14px}
+.layer-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.layer-row:first-of-type{border-top:none}
+.layer-row .idx{font-family:var(--mono);font-size:11px;color:var(--text3);width:16px;flex:none}
+.layer-row .nm{font-size:14px;font-weight:600;min-width:88px;flex:none}
+.layer-row .d{font-size:12px;color:var(--text2);margin-left:auto;text-align:right;line-height:1.5}
+.layer-row.hl{border-left:2px solid var(--accent);padding-left:12px;border-radius:6px;background:rgba(69,214,192,.05);border-top-color:var(--line)}
+.sli-list{display:flex;flex-direction:column;gap:14px}
+.sli-item .s-k{font-family:var(--mono);font-size:12px;color:var(--text);display:flex;align-items:center;gap:9px}
+.sli-item .s-k::before{content:"";width:6px;height:6px;border:1px solid var(--accent);transform:rotate(45deg);flex:none}
+.sli-item .s-d{font-size:12.5px;color:var(--text2);margin:4px 0 0 15px;line-height:1.55}
+.src-note{margin-top:14px;font-family:var(--mono);font-size:10.5px;color:var(--text3);line-height:1.8}
+
+/* ---------- 服务与产品 ---------- */
+.svc-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.svc-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:26px 26px 22px;display:flex;flex-direction:column;transition:border-color .18s,background .18s}
+.svc-card:hover{border-color:var(--accent-dim);background:var(--card2)}
+.svc-card .svc-tag{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.08em;margin-bottom:12px}
+.svc-card h3{font-size:20px;font-weight:600;margin-bottom:10px}
+.svc-card>p{font-size:13.5px;color:var(--text2);line-height:1.7;margin-bottom:18px}
+.svc-list{list-style:none;padding:0;margin:0 0 20px;display:flex;flex-direction:column;gap:9px}
+.svc-list li{font-size:13px;color:var(--text);padding-left:20px;position:relative;line-height:1.55}
+.svc-list li::before{content:"";position:absolute;left:0;top:.6em;width:7px;height:7px;border:1px solid var(--ok);transform:rotate(45deg)}
+.svc-foot{display:flex;align-items:center;gap:14px;margin-top:auto;padding-top:16px;border-top:1px dashed var(--line)}
+.svc-foot .price{font-family:var(--mono);font-size:17px;font-weight:600;color:var(--text)}
+.svc-foot .price small{font-size:11px;color:var(--text3);font-weight:400;margin-left:2px}
+.svc-enterprise{border-color:rgba(69,214,192,.3)}
+.svc-enterprise .svc-tag{color:var(--cyan)}
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:20px}
+.flow .step{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+.flow .s-no{font-family:var(--mono);font-size:11px;color:var(--accent)}
+.flow h4{font-size:14.5px;font-weight:600;margin:6px 0 4px}
+.flow p{font-size:12px;color:var(--text3);line-height:1.5}
+.mini-cases{margin-top:16px;border:1px dashed var(--line);border-radius:10px;padding:12px 16px;display:flex;flex-direction:column;gap:5px}
+.mini-cases .mc-t{font-family:var(--mono);font-size:10.5px;color:var(--text3);letter-spacing:.05em}
+.mini-cases .mc-item{font-size:12px;color:var(--text2)}
+.mini-cases .mc-item b{color:var(--text);font-weight:600;font-family:var(--mono);font-size:11.5px;margin-right:4px}
+
 /* ---------- 文章区 ---------- */
 .filter-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:22px}
 .filter-bar .f{font-family:var(--mono);font-size:12px;color:var(--text2);border:1px solid var(--line);border-radius:999px;padding:6px 13px;cursor:pointer;background:none;transition:all .15s}
@@ -186,6 +233,18 @@ section{padding:76px 0 8px}
 .cta-ops{display:flex;gap:18px;margin-top:26px;font-family:var(--mono);font-size:11.5px;color:var(--text3);flex-wrap:wrap}
 .cta-ops span{display:flex;align-items:center;gap:7px}
 .cta-ops .ok-dot{width:5px;height:5px;border-radius:50%;background:var(--ok)}
+
+/* ---------- 留资区 ---------- */
+.lead-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:40px;align-items:start}
+.lead-form{display:flex;flex-direction:column;gap:14px}
+.lead-form label{display:flex;flex-direction:column;gap:6px;font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:.04em}
+.lead-form input,.lead-form textarea{background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:13px;padding:11px 14px;line-height:1.5;resize:vertical}
+.lead-form input::placeholder,.lead-form textarea::placeholder{color:var(--text3)}
+.lead-form input:focus,.lead-form textarea:focus{border-color:var(--accent);outline:none}
+.lead-form .seg{display:flex;gap:8px}
+.lead-form .seg button{flex:1;font-family:var(--mono);font-size:12.5px;color:var(--text2);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 0;cursor:pointer;transition:all .15s}
+.lead-form .seg button.on{color:#06221E;background:var(--accent);border-color:var(--accent);font-weight:600}
+.lead-note{font-size:11px;color:var(--text3);margin-top:12px;font-family:var(--mono)}
 
 /* ---------- Footer ---------- */
 footer{border-top:1px solid var(--line);margin-top:72px;padding:34px 0 44px}
@@ -284,6 +343,10 @@ footer .links a:hover{color:var(--accent)}
   .strip .item:nth-child(2n){border-right:none}
   .strip .item:last-child{border-bottom:none}
   .play-grid{grid-template-columns:1fr}
+  .svc-grid{grid-template-columns:1fr}
+  .flow{grid-template-columns:1fr 1fr}
+  .dive{grid-template-columns:1fr}
+  .lead-grid{grid-template-columns:1fr;gap:28px}
   .art-list{grid-template-columns:1fr}
   section{padding:56px 0 4px}
   .callout .grid{grid-template-columns:repeat(2,1fr)}
@@ -304,20 +367,24 @@ footer .links a:hover{color:var(--accent)}
     <a href="#/" class="brand"><span class="dot"></span>llm-sre<em>.cc.cd</em></a>
     <nav class="main" aria-label="主导航">
       <a href="#/" data-nav="home">home</a>
-      <a href="#playbooks" data-nav="playbooks">专题</a>
+      <a href="#skills" data-nav="skills">能力地图</a>
+      <a href="#services" data-nav="services">服务</a>
       <a href="#articles" data-nav="articles">文章</a>
       <a href="#system" data-nav="system">体系</a>
     </nav>
     <div class="status-pill"><span class="dot"></span>ALL SYSTEMS <b>OPERATIONAL</b></div>
+    <a class="btn nav-cta" href="#lead" style="height:38px;padding:8px 16px;font-size:12.5px;border-color:var(--accent);color:var(--accent)">预约咨询</a>
     <button class="burger" id="burgerBtn" aria-label="打开菜单" aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
     </button>
   </div>
   <div class="mobile-menu" id="mobileMenu">
     <a href="#/" data-nav="home">home — 首页</a>
-    <a href="#playbooks" data-nav="playbooks">专题</a>
+    <a href="#skills" data-nav="skills">能力地图</a>
+    <a href="#services" data-nav="services">服务</a>
     <a href="#articles" data-nav="articles">文章</a>
     <a href="#system" data-nav="system">体系</a>
+    <a href="#lead" data-nav="lead">预约咨询 / 领取手册</a>
   </div>
 </header>
 
@@ -327,17 +394,17 @@ footer .links a:hover{color:var(--accent)}
   <!-- Hero -->
   <section class="hero">
     <div class="container">
-      <p class="kicker">// 面向大模型基础设施的可靠性工程实践站</p>
+      <p class="kicker">// 大模型工程师的能力地图 · 稳定性工程实战站</p>
       <h1>让大模型服务<br><span class="hl">一直在线</span>。</h1>
-      <p class="lede">LLM SRE 是运维、推理引擎与机器学习系统设计的交汇处。这里沉淀错误预算、容量规划、事故复盘与可观测性的实战方法，写给每一个为 token 延迟、GPU 集群与告警风暴守夜的人。</p>
+      <p class="lede">面向 LLM 工程师与大模型平台团队：一份可落地的大模型应用稳定性工程体系——多维 SLO、错误预算、容量规划、可观测性与事故复盘。既教你掌握从 Prompt 到推理服务的完整能力链路，也陪你把 token 服务守稳。</p>
       <div class="hero-cta">
-        <a class="btn primary" href="#articles">
+        <a class="btn primary" href="#lead">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-          开始阅读
+          免费领取能力地图
         </a>
-        <a class="btn" href="#subscribe">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="m22 7-10 6L2 7"/></svg>
-          订阅更新
+        <a class="btn" href="#services">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7 9 18l-5-5"/></svg>
+          查看服务与课程
         </a>
       </div>
 
@@ -379,23 +446,26 @@ footer .links a:hover{color:var(--accent)}
           </div>
         </div>
 
-        <!-- 右侧：为什么做 LLM SRE -->
+        <!-- 右侧：为什么做 LLM SRE（研究事实） -->
         <div class="panel">
           <div class="p-head">
-            <span class="t">WHY&nbsp;LLM&nbsp;SRE</span>
+            <span class="t">WHY&nbsp;STABILITY&nbsp;·&nbsp;2026</span>
           </div>
           <div style="padding:20px 22px;display:flex;flex-direction:column;gap:16px;justify-content:center">
             <div style="display:flex;gap:14px;align-items:flex-start">
               <span class="mono" style="color:var(--accent);font-size:20px;line-height:1;padding-top:2px">01</span>
-              <p style="font-size:14px;color:var(--text);line-height:1.7">推理失败不是二元的。一次慢响应、一段截断输出、一次排队超时，用户的体感各不相同——<strong style="color:#fff">SLO 必须分维度定义</strong>。</p>
+              <p style="font-size:14px;color:var(--text);line-height:1.7">AI 应用正从单轮调用演进到 Agent 任务编排，稳定性已从「接口是否可用」扩展到<strong style="color:#fff">任务可完成、结果可信任、过程可恢复、链路可追溯</strong>。</p>
             </div>
             <div style="display:flex;gap:14px;align-items:flex-start">
               <span class="mono" style="color:var(--accent);font-size:20px;line-height:1;padding-top:2px">02</span>
-              <p style="font-size:14px;color:var(--text);line-height:1.7">GPU 是昂贵而共享的资源。容量、弹性与降级，直接决定<strong style="color:#fff">单位 token 的成本</strong>与平台口碑。</p>
+              <p style="font-size:14px;color:var(--text);line-height:1.7">「正确」是概率性的：可用性、延迟、输出质量必须拆成<strong style="color:#fff">多维 SLI 分开定义</strong>——错误预算模型依然成立，只是指标要重设。</p>
             </div>
             <div style="display:flex;gap:14px;align-items:flex-start">
               <span class="mono" style="color:var(--accent);font-size:20px;line-height:1;padding-top:2px">03</span>
-              <p style="font-size:14px;color:var(--text);line-height:1.7">一次事故的代价远超重启：<strong style="color:#fff">复盘、演练与流程</strong>，是把失败变成资产的方式。</p>
+              <p style="font-size:14px;color:var(--text);line-height:1.7">市场正在为这个角色买单：ML Platform Reliability / AI Infrastructure SRE 岗位<strong style="color:#fff">18 个月招聘量翻三倍</strong>。</p>
+            </div>
+          </div>
+        </div>
             </div>
           </div>
         </div>
@@ -415,51 +485,126 @@ footer .links a:hover{color:var(--accent)}
     </div>
   </section>
 
-  <!-- 专题 -->
-  <section id="playbooks">
+  <!-- 能力地图 -->
+  <section id="skills">
     <div class="container">
       <div class="sec-head">
         <span class="no">01</span>
-        <h2>专题 · Playbooks</h2>
-        <span class="en">RELIABILITY PLAYBOOKS</span>
+        <h2>大模型工程师能力地图</h2>
+        <span class="en">LLM ENGINEER SKILL MAP · 2026</span>
       </div>
-      <div class="play-grid" id="playGrid">
-        <div class="pcard" data-filter="error-budget">
-          <div class="top"><span class="num">01</span><span class="tag">SLO</span></div>
-          <h3>错误预算</h3>
-          <p>用数学管理可靠性：SLO 定义、滚动窗口、燃烧率与告警阈值设计。</p>
-          <div class="foot"><span class="cnt">8 篇文章</span><span class="arrow">→</span></div>
+      <div class="play-grid" id="skillGrid">
+        <div class="pcard skill-card">
+          <div class="top"><span class="num">01</span><span class="tag">FOUNDATIONS</span><span class="tier t1">必备</span></div>
+          <h3>基础与模型原理</h3>
+          <p>不需要推导公式，但必须能解释模型为什么这样表现：token 粒度、嵌入、注意力与 Transformer 块。</p>
+          <div class="chips"><span class="chip">Python/异步</span><span class="chip">Transformer/注意力</span><span class="chip">Token/Embedding</span><span class="chip">KV Cache / Prefill/Decode</span><span class="chip">PyTorch + HF 生态</span></div>
         </div>
-        <div class="pcard" data-filter="alerting">
-          <div class="top"><span class="num">02</span><span class="tag">ALERTING</span></div>
-          <h3>告警治理</h3>
-          <p>从阈值噪音到可行动信号：告警编排、去重、分诊与 on-call 流程。</p>
-          <div class="foot"><span class="cnt">6 篇文章</span><span class="arrow">→</span></div>
+        <div class="pcard skill-card">
+          <div class="top"><span class="num">02</span><span class="tag">PROMPT &amp; CONTEXT</span><span class="tier t1">必备</span></div>
+          <h3>提示与上下文工程</h3>
+          <p>把业务流程拆成模型可执行的任务链，并让输出可预测、可约束。</p>
+          <div class="chips"><span class="chip">结构化 Prompt</span><span class="chip">工具调用/函数调用</span><span class="chip">输出格式约束</span><span class="chip">上下文窗口管理</span><span class="chip">DSPy 优化</span><span class="chip">成本感知</span></div>
         </div>
-        <div class="pcard" data-filter="capacity">
-          <div class="top"><span class="num">03</span><span class="tag">CAPACITY</span></div>
-          <h3>容量规划</h3>
-          <p>从吞吐公式到 GPU 排期：让容量跟着业务走，而不是跟着猜测走。</p>
-          <div class="foot"><span class="cnt">5 篇文章</span><span class="arrow">→</span></div>
+        <div class="pcard skill-card">
+          <div class="top"><span class="num">03</span><span class="tag">RETRIEVAL</span><span class="tier t1">必备</span></div>
+          <h3>RAG 与知识工程</h3>
+          <p>让模型使用企业知识：解析、分块、召回、重排、溯源，并抑制幻觉。</p>
+          <div class="chips"><span class="chip">文档解析</span><span class="chip">语义分块</span><span class="chip">向量库</span><span class="chip">混合检索+重排序</span><span class="chip">引用溯源</span><span class="chip">检索评测</span><span class="chip">幻觉抑制</span></div>
         </div>
-        <div class="pcard" data-filter="observability">
-          <div class="top"><span class="num">04</span><span class="tag">OBSERVABILITY</span></div>
-          <h3>可观测性</h3>
-          <p>指标、链路、样本：构建大模型服务的三维观测体系。</p>
-          <div class="foot"><span class="cnt">9 篇文章</span><span class="arrow">→</span></div>
+        <div class="pcard skill-card">
+          <div class="top"><span class="num">04</span><span class="tag">FINE-TUNING</span><span class="tier t2">进阶</span></div>
+          <h3>微调与对齐</h3>
+          <p>Prompt 与 RAG 解决不了的问题交给微调：格式、语气、领域词汇的强约束。</p>
+          <div class="chips"><span class="chip">LoRA / QLoRA</span><span class="chip">PEFT / TRL</span><span class="chip">DPO 对齐</span><span class="chip">指令数据构建</span><span class="chip">程序化评测 (Ragas)</span></div>
         </div>
-        <div class="pcard" data-filter="incident">
-          <div class="top"><span class="num">05</span><span class="tag">INCIDENT</span></div>
-          <h3>事故复盘</h3>
-          <p>每一次中断都留下可复用的知识：时间线、根因与改进项闭环。</p>
-          <div class="foot"><span class="cnt">7 篇文章</span><span class="arrow">→</span></div>
+        <div class="pcard skill-card">
+          <div class="top"><span class="num">05</span><span class="tag">AGENTS</span><span class="tier t2">进阶</span></div>
+          <h3>Agent 系统</h3>
+          <p>让模型调用工具、拆解任务、持续执行——状态、记忆、错误恢复是可靠性核心。</p>
+          <div class="chips"><span class="chip">工具调用 / MCP</span><span class="chip">记忆管理</span><span class="chip">任务编排 (LangGraph)</span><span class="chip">重试/降级/断点恢复</span><span class="chip">多智能体协作</span><span class="chip">沙箱与安全</span></div>
         </div>
-        <div class="pcard" data-filter="ha">
-          <div class="top"><span class="num">06</span><span class="tag">H.A.</span></div>
-          <h3>高可用设计</h3>
-          <p>降级矩阵、多活与兜底的艺术：让服务在部分失败时仍然可用。</p>
-          <div class="foot"><span class="cnt">4 篇文章</span><span class="arrow">→</span></div>
+        <div class="pcard skill-card">
+          <div class="top"><span class="num">06</span><span class="tag">RELIABILITY</span><span class="tier t3">专家</span></div>
+          <h3>部署、稳定性与可观测性</h3>
+          <p>LLM SRE 核心：把推理服务守稳，并让每一次事故都变成可复用的知识。</p>
+          <div class="chips"><span class="chip">vLLM/量化/批处理</span><span class="chip">多维 SLO/SLI</span><span class="chip">错误预算/燃烧率</span><span class="chip">容量与成本建模</span><span class="chip">指标/链路/样本</span><span class="chip">告警编排</span><span class="chip">混沌演练</span><span class="chip">事故复盘</span></div>
         </div>
+      </div>
+
+      <div class="dive">
+        <div class="box">
+          <div class="b-t">// 稳定性专项 · 分层治理框架</div>
+          <div class="layer-row"><span class="idx">01</span><span class="nm">基础设施层</span><span class="d">算力 / 网络 / 存储连续供给 · 故障可隔离</span></div>
+          <div class="layer-row"><span class="idx">02</span><span class="nm">模型服务层</span><span class="d">上线准入 / 动态调度 / 故障恢复 · 容量可调度</span></div>
+          <div class="layer-row"><span class="idx">03</span><span class="nm">应用服务层</span><span class="d">Agent / RAG 任务级保障 · 异常恢复与结果校验</span></div>
+          <div class="layer-row hl"><span class="idx">04</span><span class="nm">全栈可观测</span><span class="d">OpenTelemetry 链路骨架 · 监测→分析→处置→复盘闭环</span></div>
+        </div>
+        <div class="box">
+          <div class="b-t">// 稳定性专项 · 多维 SLI 与 Agent 目标</div>
+          <div class="sli-list">
+            <div class="sli-item"><span class="s-k">可用性 SLI</span><span class="s-d">推理端点可达、可响应，非 5xx、非限流丢弃</span></div>
+            <div class="sli-item"><span class="s-k">延迟 SLI</span><span class="s-d">TTFT p99 / TPOT p95，含流式首 token 时间</span></div>
+            <div class="sli-item"><span class="s-k">质量 SLI</span><span class="s-d">Groundedness、幻觉率、格式合规率——错误预算照常工作</span></div>
+            <div class="sli-item"><span class="s-k">Agent 四目标</span><span class="s-d">任务可完成 · 结果可信任 · 过程可恢复 · 链路可追溯</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="src-note">参考来源：信通院《公共云 AI 推理服务稳定性建设研究报告》(2026) · Avi Chawla《2026 LLM 工程师路线图》· KDnuggets 2026 LLM Engineer Roadmap · 国内大厂 LLM 工程师 JD 能力清单 · SRE is becoming the AI reliability team (2026)</div>
+    </div>
+  </section>
+
+  <!-- 服务与产品 -->
+  <section id="services">
+    <div class="container">
+      <div class="sec-head">
+        <span class="no">02</span>
+        <h2>服务与产品</h2>
+        <span class="en">SERVICES · 工程师进阶 + 企业护航</span>
+      </div>
+      <div class="svc-grid">
+        <div class="svc-card" id="svcEngineer">
+          <div class="svc-tag">FOR ENGINEERS</div>
+          <h3>LLM 稳定性实战训练营</h3>
+          <p>12 周小班制，从推理引擎原理到错误预算与事故复盘，每周一次真实集群实战复盘。完成即具备独立承担大模型服务稳定性工作的能力。</p>
+          <ul class="svc-list">
+            <li>多维 SLO/SLI 定义与错误预算落地</li>
+            <li>vLLM 推理服务调优与容量规划实战</li>
+            <li>可观测性三件套：指标、链路、样本</li>
+            <li>告警编排 + 混沌演练 + 复盘方法论</li>
+          </ul>
+          <div class="svc-foot">
+            <span class="price">¥—— <small>占位 · 待定</small></span>
+            <a class="btn primary" href="#lead">咨询课程</a>
+          </div>
+        </div>
+        <div class="svc-card svc-enterprise" id="svcBiz">
+          <div class="svc-tag">FOR TEAMS</div>
+          <h3>企业大模型稳定性护航</h3>
+          <p>面向 MaaS、AI Coding、Agent 与知识服务团队：诊断稳定性缺口，搭建分层治理框架，陪跑落地 SLO 体系与复盘闭环。</p>
+          <ul class="svc-list">
+            <li>稳定性现状诊断与风险盘点</li>
+            <li>分层治理框架 + 多维 SLI 体系搭建</li>
+            <li>团队内训：从告警治理到事故复盘</li>
+            <li>月度混沌演练 + 复盘陪跑</li>
+          </ul>
+          <div class="svc-foot">
+            <span class="price">按项目 <small>定制报价</small></span>
+            <a class="btn primary" href="#lead">预约 30 分钟咨询</a>
+          </div>
+        </div>
+      </div>
+      <div class="flow">
+        <div class="step"><span class="s-no">01</span><h4>需求诊断</h4><p>现状盘点 · 风险排序 · 明确目标</p></div>
+        <div class="step"><span class="s-no">02</span><h4>方案设计</h4><p>SLO 体系 · 治理框架 · 落地路径</p></div>
+        <div class="step"><span class="s-no">03</span><h4>落地陪跑</h4><p>每周实战 · 代码与流程双交付</p></div>
+        <div class="step"><span class="s-no">04</span><h4>复盘迭代</h4><p>月度复盘 · 演练验证 · 持续改进</p></div>
+      </div>
+      <div class="mini-cases">
+        <span class="mc-t">// 过往实践（示例数据，正式发布前替换）</span>
+        <span class="mc-item"><b>推理平台</b> · 错误预算体系从 0 到 1，告警噪音下降 70%</span>
+        <span class="mc-item"><b>Agent 应用</b> · 稳定性四目标落地，任务完成率 98.6%</span>
+        <span class="mc-item"><b>MaaS 服务</b> · 容量规划建模，GPU 采购成本预估误差 &lt; 15%</span>
       </div>
     </div>
   </section>
@@ -468,8 +613,8 @@ footer .links a:hover{color:var(--accent)}
   <section id="articles">
     <div class="container">
       <div class="sec-head">
-        <span class="no">02</span>
-        <h2>最新文章</h2>
+        <span class="no">03</span>
+        <h2>实践笔记</h2>
         <span class="en">FIELD NOTES &amp; POSTMORTEMS</span>
       </div>
       <div class="filter-bar" id="filterBar">
@@ -491,7 +636,7 @@ footer .links a:hover{color:var(--accent)}
   <section id="system">
     <div class="container">
       <div class="sec-head">
-        <span class="no">03</span>
+        <span class="no">04</span>
         <h2>知识体系</h2>
         <span class="en">LLM SERVING RELIABILITY MAP</span>
       </div>
@@ -527,20 +672,47 @@ footer .links a:hover{color:var(--accent)}
     </div>
   </section>
 
-  <!-- 订阅 -->
-  <section class="cta" id="subscribe">
+  <!-- 留资 -->
+  <section class="cta" id="lead">
     <div class="container">
       <div class="cta-box">
-        <h2>订阅站内更新</h2>
-        <p>新文章、复盘与实战手册发布时，一封邮件直达。不刷存在感，每月最多两封。</p>
-        <form class="sub-form" id="subForm">
-          <input type="email" id="subEmail" placeholder="you@company.com" aria-label="邮箱地址" required>
-          <button class="btn primary" type="submit">订阅</button>
-        </form>
-        <div class="cta-ops">
-          <span><span class="ok-dot"></span>RSS 已提供</span>
-          <span><span class="ok-dot"></span>支持邮件退订</span>
-          <span><span class="ok-dot"></span>内容均为实战经验</span>
+        <div class="lead-grid">
+          <div class="lead-left">
+            <p class="mono" style="font-size:12px;color:var(--accent);margin-bottom:14px;letter-spacing:.04em">// FREE · LLM STABILITY SKILL MAP V1.0</p>
+            <h2>免费领取《大模型稳定性能力地图》</h2>
+            <p style="color:var(--text2);font-size:14.5px;max-width:46ch;margin-bottom:22px">基于 2026 年行业能力框架整理的 60+ 技能点清单，含稳定性专项框架与自评表。填写信息，24 小时内发送至你的邮箱。</p>
+            <ul class="svc-list">
+              <li>6 大能力域 × 技能点与掌握分层（必备/进阶/专家）</li>
+              <li>稳定性专项：分层治理框架 + 多维 SLI 定义</li>
+              <li>工程师 / 团队自评清单，可直接执行</li>
+            </ul>
+            <div class="cta-ops" style="margin-top:20px">
+              <span><span class="ok-dot"></span>24h 内送达</span>
+              <span><span class="ok-dot"></span>可随时退订</span>
+              <span><span class="ok-dot"></span>企业客户附 30 分钟咨询</span>
+            </div>
+          </div>
+          <div class="lead-right">
+            <form class="lead-form" id="leadForm">
+              <label>称呼
+                <input type="text" id="leadName" placeholder="怎么称呼您" required>
+              </label>
+              <label>邮箱
+                <input type="email" id="leadEmail" placeholder="you@company.com" required>
+              </label>
+              <label>身份
+                <span class="seg" id="leadRole">
+                  <button type="button" class="on" data-r="engineer">工程师</button>
+                  <button type="button" data-r="team">企业 / 团队</button>
+                </span>
+              </label>
+              <label>想解决的问题
+                <textarea id="leadMsg" rows="2" placeholder="选填：当前最大的稳定性痛点"></textarea>
+              </label>
+              <button class="btn primary" type="submit" style="width:100%;justify-content:center;margin-top:4px">领取手册 · 预约咨询</button>
+            </form>
+            <p class="lead-note">演示站点：提交仅展示交互流程，不会真实外发信息。</p>
+          </div>
         </div>
       </div>
     </div>
@@ -565,12 +737,12 @@ footer .links a:hover{color:var(--accent)}
   <div class="container in">
     <a href="#/" class="brand"><span class="dot"></span>llm-sre<em>.cc.cd</em></a>
     <div class="links">
-      <a href="#playbooks">专题</a>
+      <a href="#skills">能力地图</a>
+      <a href="#services">服务</a>
       <a href="#articles">文章</a>
-      <a href="#system">体系</a>
-      <a href="#subscribe">订阅</a>
+      <a href="#lead">领取手册</a>
     </div>
-    <span class="copy">© 2026 llm-sre · built for reliability · <span id="year"></span></span>
+    <span class="copy">© 2026 llm-sre · built for reliability · <span id="year"></span> · 联系：<span class="mono">contact@llm-sre.cc.cd（占位）</span></span>
   </div>
 </footer>
 
@@ -830,7 +1002,7 @@ function route(){
 window.addEventListener('hashchange',route);
 
 /* 首页滚动侦测导航高亮 */
-const secMap = ['home','playbooks','articles','system'];
+const secMap = ['home','skills','services','articles','system'];
 const spyHome = new IntersectionObserver(entries=>{
   entries.forEach(en=>{
     if(en.isIntersecting){
@@ -839,7 +1011,7 @@ const spyHome = new IntersectionObserver(entries=>{
     }
   });
 },{rootMargin:'-45% 0px -50% 0px'});
-['playbooks','articles','system'].forEach(id=>spyHome.observe(document.getElementById(id)));
+secMap.filter(id=>id!=='home').forEach(id=>spyHome.observe(document.getElementById(id)));
 
 /* ============================================================
    交互
@@ -866,13 +1038,12 @@ document.getElementById('filterBar').addEventListener('click',e=>{
   curFilter = btn.dataset.f;
   renderArtList();
 });
-// 专题卡 → 联动筛选
-document.getElementById('playGrid').addEventListener('click',e=>{
+// 能力地图卡 → 进入实践笔记
+document.getElementById('skillGrid').addEventListener('click',e=>{
   const card = e.target.closest('.pcard');
   if(!card) return;
-  const f = card.dataset.filter;
-  document.querySelectorAll('.f').forEach(x=>x.classList.toggle('on',x.dataset.f===f));
-  curFilter = f;
+  curFilter = 'all';
+  document.querySelectorAll('.f').forEach(x=>x.classList.toggle('on',x.dataset.f==='all'));
   renderArtList();
   document.getElementById('articles').scrollIntoView({behavior:'smooth'});
 });
@@ -889,15 +1060,28 @@ artListEl.addEventListener('keydown',e=>{
 });
 document.getElementById('backBtn').addEventListener('click',()=>location.hash='#/');
 
-// 订阅
-document.getElementById('subForm').addEventListener('submit',e=>{
+// 留资表单
+document.getElementById('leadRole').addEventListener('click',e=>{
+  const b = e.target.closest('button');
+  if(!b) return;
+  document.querySelectorAll('#leadRole button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+});
+document.getElementById('leadForm').addEventListener('submit',e=>{
   e.preventDefault();
-  const email = document.getElementById('subEmail');
-  if(!email.value || !email.value.includes('@')){
-    toast('邮箱格式不正确',false); return;
+  const name = document.getElementById('leadName');
+  const email = document.getElementById('leadEmail');
+  if(!name.value.trim()){
+    toast('请填写称呼',false); name.focus(); return;
   }
-  toast('已加入订阅队列 · 设计演示',true);
-  email.value='';
+  if(!email.value || !email.value.includes('@')){
+    toast('邮箱格式不正确',false); email.focus(); return;
+  }
+  const role = document.querySelector('#leadRole button.on').dataset.r;
+  toast(role==='team' ? '已记录企业咨询意向 · 演示环境' : '已记录领取申请 · 演示环境',true);
+  document.getElementById('leadForm').reset();
+  document.querySelector('#leadRole button.on').classList.remove('on');
+  document.querySelector('#leadRole button[data-r="engineer"]').classList.add('on');
 });
 function toast(msg,ok){
   const t = document.getElementById('toast');
