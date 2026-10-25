@@ -1,5 +1,5 @@
 {
-  "src": "/Users/karl.sy/opensource/f-m-karl.github.io/index.html",
+  "src": "index.html",
   "url": "file:///Users/karl.sy/opensource/f-m-karl.github.io/index.html",
   "outdir": "/Users/karl.sy/opensource/f-m-karl.github.io/_shots",
   "include": [
@@ -9,29 +9,32 @@
   ],
   "shots": {
     "desktop": {
-      "screenshot": "/Users/karl.sy/opensource/f-m-karl.github.io/_shots/index_desktop.jpg",
-      "screenshotBytes": 280657,
+      "slices": [
+        "/Users/karl.sy/opensource/f-m-karl.github.io/_shots/index_desktop_p1of2.jpg",
+        "/Users/karl.sy/opensource/f-m-karl.github.io/_shots/index_desktop_p2of2.jpg"
+      ],
+      "sliceHint": "按顺序 Read slices 里的各分片。",
       "truncated": false,
       "structure": {
         "title": "LLM SRE — 大模型站点可靠性工程",
-        "firstH1": "让大模型服务一直在线。",
+        "firstH1": "Demo 跑通只是开始，活过生产，才算本事。",
         "viewport": {
           "w": 1440,
           "h": 900
         },
         "fullpage": {
           "w": 1440,
-          "h": 5391
+          "h": 7129
         },
         "counts": {
-          "section": 6,
+          "section": 8,
           "h1": 1,
-          "h2": 5,
+          "h2": 9,
           "img": 0,
           "canvas": 1,
           "svg": 4,
-          "links": 22,
-          "buttons": 13
+          "links": 28,
+          "buttons": 24
         }
       },
       "consoleErrors": [],
@@ -42,33 +45,34 @@
     },
     "mobile": {
       "slices": [
-        "/Users/karl.sy/opensource/f-m-karl.github.io/_shots/index_mobile_p1of4.jpg",
-        "/Users/karl.sy/opensource/f-m-karl.github.io/_shots/index_mobile_p2of4.jpg",
-        "/Users/karl.sy/opensource/f-m-karl.github.io/_shots/index_mobile_p3of4.jpg",
-        "/Users/karl.sy/opensource/f-m-karl.github.io/_shots/index_mobile_p4of4.jpg"
+        "/Users/karl.sy/opensource/f-m-karl.github.io/_shots/index_mobile_p1of5.jpg",
+        "/Users/karl.sy/opensource/f-m-karl.github.io/_shots/index_mobile_p2of5.jpg",
+        "/Users/karl.sy/opensource/f-m-karl.github.io/_shots/index_mobile_p3of5.jpg",
+        "/Users/karl.sy/opensource/f-m-karl.github.io/_shots/index_mobile_p4of5.jpg",
+        "/Users/karl.sy/opensource/f-m-karl.github.io/_shots/index_mobile_p5of5.jpg"
       ],
       "sliceHint": "按顺序 Read slices 里的各分片。",
       "truncated": false,
       "structure": {
         "title": "LLM SRE — 大模型站点可靠性工程",
-        "firstH1": "让大模型服务一直在线。",
+        "firstH1": "Demo 跑通只是开始，活过生产，才算本事。",
         "viewport": {
           "w": 390,
           "h": 844
         },
         "fullpage": {
           "w": 390,
-          "h": 9920
+          "h": 13550
         },
         "counts": {
-          "section": 6,
+          "section": 8,
           "h1": 1,
-          "h2": 5,
+          "h2": 9,
           "img": 0,
           "canvas": 1,
           "svg": 4,
-          "links": 22,
-          "buttons": 13
+          "links": 28,
+          "buttons": 24
         }
       },
       "consoleErrors": [],
@@ -82,7 +86,7 @@
   "chromiumExec": "/Users/karl.sy/Library/Caches/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-mac-arm64/chrome-headless-shell",
   "engineDegraded": true,
   "engineDegradedReason": "playwright 未装",
-  "elapsedSec": 11.78,
+  "elapsedSec": 13.52,
   "schemaVersion": 2,
   "status": "pass",
   "engineInfo": {
@@ -93,11 +97,11 @@
     ]
   },
   "input": {
-    "original": "/Users/karl.sy/opensource/f-m-karl.github.io/index.html",
+    "original": "index.html",
     "resolvedPath": "/Users/karl.sy/opensource/f-m-karl.github.io/index.html",
     "baseUrl": "file:///Users/karl.sy/opensource/f-m-karl.github.io/index.html",
     "protocol": "file",
-    "cwd": "/Users/karl.sy/Library/Application Support/Doubao/Default/.doubao/agent_mode/workspace/.skills/html",
+    "cwd": "/Users/karl.sy/opensource/f-m-karl.github.io",
     "mediaMode": {
       "reducedMotion": true
     }
@@ -106,8 +110,10 @@
     "screenshots": [
       {
         "viewport": "desktop",
-        "path": "/Users/karl.sy/opensource/f-m-karl.github.io/_shots/index_desktop.jpg",
-        "size": 280657,
+        "tiles": [
+          "/Users/karl.sy/opensource/f-m-karl.github.io/_shots/index_desktop_p1of2.jpg",
+          "/Users/karl.sy/opensource/f-m-karl.github.io/_shots/index_desktop_p2of2.jpg"
+        ],
         "visualCoverage": {
           "complete": true,
           "reason": null
@@ -116,10 +122,11 @@
       {
         "viewport": "mobile",
         "tiles": [
-          "/Users/karl.sy/opensource/f-m-karl.github.io/_shots/index_mobile_p1of4.jpg",
-          "/Users/karl.sy/opensource/f-m-karl.github.io/_shots/index_mobile_p2of4.jpg",
-          "/Users/karl.sy/opensource/f-m-karl.github.io/_shots/index_mobile_p3of4.jpg",
-          "/Users/karl.sy/opensource/f-m-karl.github.io/_shots/index_mobile_p4of4.jpg"
+          "/Users/karl.sy/opensource/f-m-karl.github.io/_shots/index_mobile_p1of5.jpg",
+          "/Users/karl.sy/opensource/f-m-karl.github.io/_shots/index_mobile_p2of5.jpg",
+          "/Users/karl.sy/opensource/f-m-karl.github.io/_shots/index_mobile_p3of5.jpg",
+          "/Users/karl.sy/opensource/f-m-karl.github.io/_shots/index_mobile_p4of5.jpg",
+          "/Users/karl.sy/opensource/f-m-karl.github.io/_shots/index_mobile_p5of5.jpg"
         ],
         "visualCoverage": {
           "complete": true,
