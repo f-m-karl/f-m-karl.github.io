@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LLM SRE — 大模型站点可靠性工程</title>
+<meta name="description" content="面向大模型基础设施的可靠性工程：错误预算、容量规划、事故复盘与可观测性的实战方法。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230B1016'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%2345D6C0'/%3E%3Crect x='6' y='6' width='2' height='20' fill='%23223A4A'/%3E%3Crect x='24' y='6' width='2' height='20' fill='%23223A4A'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://miaoda.feishu.cn">
+<link rel="preconnect" href="https://sf3-scmcdn-cn.feishucdn.com" crossorigin>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+<script src="https://fastly.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+/* ============================================================
+   LLM SRE 站点设计 — 设计系统
+   深墨蓝底 · 双排印体系（等宽承载工程数据 / 无衬线承载正文）
+   状态色语义化：绿=健康 琥珀=告警 红=事故
+   ============================================================ */
+:root{
+  --bg:#0B1016; --bg2:#10171F; --panel:#141D27; --card:#16212C; --card2:#1A2734;
+  --line:#22313F; --line2:#2C3E50;
+  --text:#DCE4EE; --text2:#93A2B4; --text3:#5E7187;
+  --accent:#45D6C0; --accent-dim:#2E9E8E;
+  --ok:#3FBF7F; --warn:#E5A94E; --crit:#E46A6A; --cyan:#7EC8E3;
+  --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  --sans:'IBM Plex Sans','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  --header-h:64px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--header-h) + 16px)}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+::selection{background:rgba(69,214,192,.28);color:#fff}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:inherit;text-decoration:none}
+.mono{font-family:var(--mono)}
+.container{max-width:1180px;margin:0 auto;padding:0 24px}
+.hidden{display:none!important}
+
+/* ---------- 顶栏 ---------- */
+header{position:sticky;top:0;z-index:50;background:rgba(11,16,22,.92);backdrop-filter:none;border-bottom:1px solid var(--line)}
+header .bar{display:flex;align-items:center;gap:28px;height:var(--header-h)}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-weight:600;font-size:15px;letter-spacing:.02em}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px rgba(63,191,127,.7)}
+.brand .dot.warn{background:var(--warn);box-shadow:0 0 10px rgba(229,169,78,.7)}
+.brand em{font-style:normal;color:var(--text2);font-weight:400}
+nav.main{display:flex;gap:6px;margin-left:auto}
+nav.main a{font-family:var(--mono);font-size:13px;color:var(--text2);padding:8px 12px;border-radius:6px;transition:color .15s,background .15s}
+nav.main a:hover{color:var(--text);background:rgba(255,255,255,.05)}
+nav.main a.active{color:var(--accent);background:rgba(69,214,192,.08)}
+.status-pill{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--text2);border:1px solid var(--line);border-radius:999px;padding:6px 12px}
+.status-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);animation:pulse 2.6s ease-in-out infinite}
+.status-pill b{color:var(--ok);font-weight:500}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.burger{display:none;width:40px;height:40px;border:1px solid var(--line);border-radius:8px;background:none;color:var(--text);cursor:pointer;align-items:center;justify-content:center}
+.burger svg{width:18px;height:18px}
+.mobile-menu{display:none;border-top:1px solid var(--line);padding:10px 24px 16px;background:var(--bg)}
+.mobile-menu a{display:block;font-family:var(--mono);font-size:14px;color:var(--text2);padding:10px 0;border-bottom:1px dashed var(--line)}
+.mobile-menu a:last-child{border-bottom:none}
+.mobile-menu a.active{color:var(--accent)}
+
+/* ---------- Hero ---------- */
+.hero{padding:72px 0 40px;position:relative}
+.hero::before{content:"";position:absolute;inset:0;pointer-events:none;background:
+  radial-gradient(900px 420px at 18% -10%,rgba(69,214,192,.07),transparent 60%),
+  radial-gradient(700px 380px at 92% 0%,rgba(126,200,227,.06),transparent 55%)}
+.hero .kicker{font-family:var(--mono);font-size:12.5px;color:var(--accent);display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.hero .kicker::before{content:"";width:26px;height:1px;background:var(--accent)}
+.hero h1{font-size:clamp(34px,5.2vw,58px);line-height:1.14;font-weight:600;letter-spacing:-.01em;max-width:15em}
+.hero h1 .hl{color:var(--accent)}
+.hero .lede{margin-top:18px;font-size:16.5px;color:var(--text2);max-width:56ch}
+.hero-cta{display:flex;gap:14px;margin-top:28px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13.5px;padding:12px 20px;border-radius:8px;border:1px solid var(--line);cursor:pointer;transition:all .18s;background:none;color:var(--text)}
+.btn svg{width:14px;height:14px}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#06221E;font-weight:600}
+.btn.primary:hover{background:#5BE0CC;color:#06221E}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:44px;align-items:stretch}
+
+/* 实时可靠性面板 */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.panel .p-head{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.panel .p-head .t{font-family:var(--mono);font-size:12.5px;color:var(--text2)}
+.panel .p-head .t b{color:var(--text);font-weight:500}
+.panel .p-head .live{display:flex;align-items:center;gap:7px;margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--ok)}
+.panel .p-head .live .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);animation:pulse 2.2s ease-in-out infinite}
+.panel .p-body{flex:1;display:grid;grid-template-columns:1.2fr 1fr;min-height:250px}
+.chart-box{position:relative;padding:14px 10px 8px;border-right:1px solid var(--line)}
+.chart-box #budgetChart{width:100%;height:236px}
+.gauges{display:flex;flex-direction:column}
+.gauge{padding:12px 18px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:3px}
+.gauge:last-child{border-bottom:none}
+.gauge .g-label{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:.04em}
+.gauge .g-val{font-family:var(--mono);font-size:21px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
+.gauge .g-val .u{font-size:12px;color:var(--text3);font-weight:400;margin-left:2px}
+.gauge .g-val.ok{color:var(--ok)}
+.gauge .g-val.warn{color:var(--warn)}
+.gauge .g-bar{height:3px;background:var(--line);border-radius:2px;margin-top:6px;overflow:hidden}
+.gauge .g-bar i{display:block;height:100%;border-radius:2px;background:var(--accent)}
+.gauge .g-bar i.ok{background:var(--ok)}
+.gauge .g-bar i.warn{background:var(--warn)}
+.gauge .g-note{font-family:var(--mono);font-size:11px;color:var(--text3)}
+
+/* 指标带 */
+.strip{border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:40px;background:var(--bg2)}
+.strip .in{display:grid;grid-template-columns:repeat(6,1fr);gap:0}
+.strip .item{padding:16px 18px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
+.strip .item:last-child{border-right:none}
+.strip .item .k{font-family:var(--mono);font-size:10.5px;color:var(--text3);letter-spacing:.05em}
+.strip .item .v{font-family:var(--mono);font-size:16px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
+.strip .item .v small{color:var(--text3);font-weight:400;font-size:11px}
+
+/* ---------- 区块通用 ---------- */
+section{padding:76px 0 8px}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:34px;border-bottom:1px solid var(--line);padding-bottom:14px}
+.sec-head .no{font-family:var(--mono);font-size:13px;color:var(--accent)}
+.sec-head h2{font-size:26px;font-weight:600;letter-spacing:-.01em}
+.sec-head .en{font-family:var(--mono);font-size:12px;color:var(--text3);margin-left:auto;text-transform:none}
+.sec-head .lnk{font-family:var(--mono);font-size:12.5px;color:var(--text2);cursor:pointer;transition:color .15s}
+.sec-head .lnk:hover{color:var(--accent)}
+
+/* ---------- 专题矩阵 ---------- */
+.play-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.pcard{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px 20px 18px;cursor:pointer;transition:border-color .18s,transform .18s,background .18s;position:relative}
+.pcard:hover{border-color:var(--accent-dim);background:var(--card2);transform:translateY(-2px)}
+.pcard .top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.pcard .num{font-family:var(--mono);font-size:12px;color:var(--text3)}
+.pcard .tag{font-family:var(--mono);font-size:10.5px;color:var(--accent);border:1px solid rgba(69,214,192,.35);border-radius:999px;padding:2px 9px;letter-spacing:.04em}
+.pcard h3{font-size:17px;font-weight:600;margin-bottom:8px}
+.pcard p{font-size:13.5px;color:var(--text2);line-height:1.65}
+.pcard .foot{display:flex;align-items:center;gap:10px;margin-top:16px;font-family:var(--mono);font-size:11.5px;color:var(--text3)}
+.pcard .foot .cnt{color:var(--text2)}
+.pcard .foot .arrow{margin-left:auto;opacity:0;transition:opacity .18s,transform .18s;color:var(--accent)}
+.pcard:hover .arrow{opacity:1;transform:translateX(3px)}
+
+/* ---------- 文章区 ---------- */
+.filter-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+.filter-bar .f{font-family:var(--mono);font-size:12px;color:var(--text2);border:1px solid var(--line);border-radius:999px;padding:6px 13px;cursor:pointer;background:none;transition:all .15s}
+.filter-bar .f:hover{color:var(--text);border-color:var(--line2)}
+.filter-bar .f.on{color:#06221E;background:var(--accent);border-color:var(--accent);font-weight:600}
+.filter-bar .all-count{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--text3)}
+.art-list{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.art-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;cursor:pointer;transition:border-color .18s,transform .18s,background .18s;position:relative;display:flex;flex-direction:column}
+.art-card:hover{border-color:var(--accent-dim);background:var(--card2);transform:translateY(-2px)}
+.art-card .ameta{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-family:var(--mono);font-size:10.5px;color:var(--text3)}
+.art-card .ameta .dot{width:6px;height:6px;border-radius:50%;flex:none}
+.art-card .ameta .cls{color:var(--cyan);letter-spacing:.05em}
+.art-card .ameta .flag{margin-left:auto;color:var(--accent);border:1px solid rgba(69,214,192,.35);border-radius:4px;padding:1px 6px;font-size:10px}
+.art-card h3{font-size:16px;font-weight:600;line-height:1.5;margin-bottom:8px}
+.art-card p{font-size:13px;color:var(--text2);line-height:1.65;flex:1}
+.art-card .afoot{display:flex;align-items:center;gap:12px;margin-top:16px;padding-top:12px;border-top:1px dashed var(--line);font-family:var(--mono);font-size:11px;color:var(--text3)}
+.art-card .afoot time{font-variant-numeric:tabular-nums}
+.art-card .afoot .read{margin-left:auto}
+.art-card .afoot .more{color:var(--accent);opacity:0;transition:opacity .18s}
+.art-card:hover .more{opacity:1}
+.empty-tip{font-family:var(--mono);color:var(--text3);padding:30px 0;text-align:center}
+
+/* ---------- 体系架构 ---------- */
+.sys-wrap{display:grid;grid-template-columns:1fr 260px;gap:16px}
+.arch{display:flex;flex-direction:column;gap:10px}
+.layer{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.layer .l-top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.layer .l-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
+.layer h4{font-size:15px;font-weight:600}
+.layer .l-en{font-family:var(--mono);font-size:11px;color:var(--text3);margin-left:auto}
+.layer .chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-family:var(--mono);font-size:11.5px;color:var(--text2);border:1px solid var(--line2);border-radius:6px;padding:4px 10px;background:var(--bg2)}
+.chip b{color:var(--accent);font-weight:500}
+.ctl{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.ctl .c-title{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.05em}
+.ctl .c-item{display:flex;align-items:center;gap:10px}
+.ctl .c-item .i{font-family:var(--mono);font-size:11.5px;color:var(--text);font-weight:500}
+.ctl .c-item .d{font-size:11.5px;color:var(--text3);margin-left:auto;text-align:right;line-height:1.4}
+.ctl .c-item::before{content:"";width:5px;height:5px;border:1px solid var(--accent);transform:rotate(45deg);flex:none}
+
+/* ---------- 订阅 ---------- */
+.cta{padding:56px 0 0}
+.cta-box{border:1px solid var(--line);border-radius:14px;padding:44px;position:relative;background:
+  radial-gradient(520px 200px at 20% 0%,rgba(69,214,192,.08),transparent 60%),
+  var(--bg2);overflow:hidden}
+.cta-box h2{font-size:26px;font-weight:600;margin-bottom:10px}
+.cta-box p{color:var(--text2);font-size:14.5px;max-width:52ch;margin-bottom:24px}
+.sub-form{display:flex;gap:10px;max-width:440px;flex-wrap:wrap}
+.sub-form input{flex:1;min-width:220px;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:13.5px;padding:12px 16px;height:46px}
+.sub-form input::placeholder{color:var(--text3)}
+.sub-form input:focus{border-color:var(--accent);outline:none}
+.cta-ops{display:flex;gap:18px;margin-top:26px;font-family:var(--mono);font-size:11.5px;color:var(--text3);flex-wrap:wrap}
+.cta-ops span{display:flex;align-items:center;gap:7px}
+.cta-ops .ok-dot{width:5px;height:5px;border-radius:50%;background:var(--ok)}
+
+/* ---------- Footer ---------- */
+footer{border-top:1px solid var(--line);margin-top:72px;padding:34px 0 44px}
+footer .in{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+footer .brand{font-size:13px}
+footer .copy{font-family:var(--mono);font-size:11.5px;color:var(--text3);margin-left:auto}
+footer .links{display:flex;gap:16px;font-family:var(--mono);font-size:12px;color:var(--text2)}
+footer .links a:hover{color:var(--accent)}
+
+/* ---------- Toast ---------- */
+#toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--panel);border:1px solid var(--accent-dim);color:var(--text);font-family:var(--mono);font-size:12.5px;padding:12px 20px;border-radius:8px;opacity:0;transition:all .25s;z-index:100;pointer-events:none;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast .ok{color:var(--ok)}
+
+/* ---------- 文章视图 ---------- */
+.article{max-width:860px;margin:0 auto;padding:56px 0 40px}
+.art-back{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12.5px;color:var(--text2);cursor:pointer;margin-bottom:28px;transition:color .15s;border:none;background:none;padding:0}
+.art-back:hover{color:var(--accent)}
+.art-back svg{width:13px;height:13px}
+.article .kicker{font-family:var(--mono);font-size:12px;color:var(--cyan);display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.article h1{font-size:clamp(28px,4vw,40px);line-height:1.22;font-weight:600;letter-spacing:-.01em;margin-bottom:16px}
+.article .ameta{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:14px 0 20px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--text3)}
+.article .ameta .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex:none}
+.article .summary{font-size:17px;color:var(--text2);line-height:1.8;padding:22px 0 6px}
+.article .summary .lead{color:var(--text)}
+.art-body{display:grid;grid-template-columns:190px 1fr;gap:44px;margin-top:26px}
+.toc{position:sticky;top:calc(var(--header-h) + 20px);align-self:start;font-size:13px;max-height:calc(100vh - var(--header-h) - 60px);overflow:auto}
+.toc .toc-t{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:.08em;margin-bottom:12px}
+.toc a{display:block;color:var(--text2);padding:5px 0 5px 12px;border-left:1px solid var(--line);transition:all .15s;line-height:1.5}
+.toc a:hover{color:var(--text)}
+.toc a.on{color:var(--accent);border-left-color:var(--accent)}
+.art-body .content{min-width:0}
+.content h2{font-size:22px;font-weight:600;margin:40px 0 16px;padding-top:6px;letter-spacing:-.01em;scroll-margin-top:calc(var(--header-h) + 20px)}
+.content h2 .n{font-family:var(--mono);font-size:12.5px;color:var(--accent);margin-right:12px}
+.content p{margin-bottom:16px;color:var(--text);line-height:1.85}
+.content strong{color:#fff}
+.content ul{margin:0 0 16px 0;padding-left:22px;list-style:none}
+.content ul li{position:relative;padding-left:16px;margin-bottom:8px;color:var(--text);line-height:1.75}
+.content ul li::before{content:"";position:absolute;left:0;top:.78em;width:6px;height:6px;border:1px solid var(--accent);transform:rotate(45deg)}
+.content .code-block{margin:22px 0;background:#0C1219;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.code-block .cb-head{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:11px;color:var(--text3)}
+.code-block .cb-head .dot{width:8px;height:8px;border-radius:50%;background:var(--line2);flex:none}
+.code-block .cb-head .fname{margin-right:auto}
+.code-block pre{padding:16px;overflow-x:auto;font-family:var(--mono);font-size:12.8px;line-height:1.75;color:#C9D8E5}
+.code-block .tok-c{color:var(--text3)} .tok-k{color:var(--cyan)} .tok-n{color:var(--warn)} .tok-s{color:var(--ok)} .tok-m{color:var(--accent)}
+.callout{margin:24px 0;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:8px;padding:16px 18px;background:var(--panel)}
+.callout .c-t{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.06em;margin-bottom:8px}
+.callout .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.callout .kpi .v{font-family:var(--mono);font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
+.callout .kpi .v.ok{color:var(--ok)} .callout .kpi .v.warn{color:var(--warn)}
+.callout .kpi .k{font-family:var(--mono);font-size:10.5px;color:var(--text3);margin-top:3px}
+.callout.warn{border-left-color:var(--warn)} .callout.warn .c-t{color:var(--warn)}
+.formula{margin:22px 0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 22px;text-align:center;font-family:var(--mono);font-size:16px;color:var(--text)}
+.formula .eq{color:var(--accent)}
+.timeline{margin:26px 0;display:grid;grid-template-columns:72px 28px 1fr;gap:0}
+.timeline .tl-item{display:contents}
+.timeline .t-time{font-family:var(--mono);font-size:12px;color:var(--text3);padding:0 0 22px;text-align:right;padding-top:2px}
+.timeline .t-axis{position:relative}
+.timeline .t-axis::before{content:"";position:absolute;left:13px;top:4px;bottom:4px;width:1px;background:var(--line2)}
+.timeline .t-axis .t-dot{position:absolute;left:9px;top:6px;width:9px;height:9px;border-radius:50%;background:var(--bg);border:2px solid var(--accent)}
+.timeline .t-body{padding:0 0 22px 14px}
+.timeline .t-body h5{font-size:14.5px;font-weight:600;margin-bottom:3px}
+.timeline .t-body p{font-size:13px;color:var(--text2);line-height:1.6}
+.art-foot{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:12px;color:var(--text3);flex-wrap:wrap}
+.art-foot .tag{color:var(--cyan);border:1px solid var(--line2);border-radius:999px;padding:3px 10px;font-size:11px}
+.art-foot .copy{margin-left:auto}
+.related{margin-top:44px}
+.related h3{font-size:18px;font-weight:600;margin-bottom:18px}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:1024px){
+  .hero-grid{grid-template-columns:1fr}
+  .strip .in{grid-template-columns:repeat(3,1fr)}
+  .strip .item:nth-child(3){border-right:none}
+  .strip .item:nth-child(-n+3){border-bottom:1px solid var(--line)}
+  .play-grid{grid-template-columns:repeat(2,1fr)}
+  .art-list{grid-template-columns:repeat(2,1fr)}
+  .sys-wrap{grid-template-columns:1fr}
+  .art-body{grid-template-columns:1fr}
+  .toc{position:static;max-height:none;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:8px}
+  .toc a{display:inline-block;margin-right:10px;border-left:none;border-bottom:1px solid var(--line);padding:4px 10px}
+  .toc a.on{border-bottom-color:var(--accent)}
+}
+@media (max-width:700px){
+  .container{padding:0 18px}
+  nav.main,.status-pill{display:none}
+  .burger{display:inline-flex}
+  .hero{padding:48px 0 28px}
+  .hero-grid{margin-top:32px}
+  .panel .p-body{grid-template-columns:1fr}
+  .chart-box{border-right:none;border-bottom:1px solid var(--line)}
+  .gauges{display:grid;grid-template-columns:1fr 1fr}
+  .gauge:nth-child(odd){border-right:1px solid var(--line)}
+  .strip .in{grid-template-columns:repeat(2,1fr)}
+  .strip .item{border-bottom:1px solid var(--line)}
+  .strip .item:nth-child(2n){border-right:none}
+  .strip .item:last-child{border-bottom:none}
+  .play-grid{grid-template-columns:1fr}
+  .art-list{grid-template-columns:1fr}
+  section{padding:56px 0 4px}
+  .callout .grid{grid-template-columns:repeat(2,1fr)}
+  .cta-box{padding:30px 22px}
+  .timeline{grid-template-columns:60px 22px 1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== 顶栏 ===== -->
+<header>
+  <div class="container bar">
+    <a href="#/" class="brand"><span class="dot"></span>llm-sre<em>.cc.cd</em></a>
+    <nav class="main" aria-label="主导航">
+      <a href="#/" data-nav="home">home</a>
+      <a href="#playbooks" data-nav="playbooks">专题</a>
+      <a href="#articles" data-nav="articles">文章</a>
+      <a href="#system" data-nav="system">体系</a>
+    </nav>
+    <div class="status-pill"><span class="dot"></span>ALL SYSTEMS <b>OPERATIONAL</b></div>
+    <button class="burger" id="burgerBtn" aria-label="打开菜单" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#/" data-nav="home">home — 首页</a>
+    <a href="#playbooks" data-nav="playbooks">专题</a>
+    <a href="#articles" data-nav="articles">文章</a>
+    <a href="#system" data-nav="system">体系</a>
+  </div>
+</header>
+
+<!-- ===== 首页视图 ===== -->
+<div id="view-home">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <p class="kicker">// 面向大模型基础设施的可靠性工程实践站</p>
+      <h1>让大模型服务<br><span class="hl">一直在线</span>。</h1>
+      <p class="lede">LLM SRE 是运维、推理引擎与机器学习系统设计的交汇处。这里沉淀错误预算、容量规划、事故复盘与可观测性的实战方法，写给每一个为 token 延迟、GPU 集群与告警风暴守夜的人。</p>
+      <div class="hero-cta">
+        <a class="btn primary" href="#articles">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          开始阅读
+        </a>
+        <a class="btn" href="#subscribe">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="m22 7-10 6L2 7"/></svg>
+          订阅更新
+        </a>
+      </div>
+
+      <div class="hero-grid">
+        <!-- 实时可靠性面板 -->
+        <div class="panel" id="livePanel">
+          <div class="p-head">
+            <span class="t">ERRBUDGET&nbsp;·&nbsp;30D 滚动窗口</span>
+            <span class="live"><span class="dot"></span>LIVE</span>
+          </div>
+          <div class="p-body">
+            <div class="chart-box"><div id="budgetChart"></div></div>
+            <div class="gauges" id="heroGauges">
+              <div class="gauge">
+                <span class="g-label">ERROR BUDGET 剩余</span>
+                <span class="g-val ok" data-val="86.2">86.2<span class="u">%</span></span>
+                <span class="g-bar"><i class="ok" style="width:86.2%"></i></span>
+                <span class="g-note">本月消耗 13.8% · 余额充足</span>
+              </div>
+              <div class="gauge">
+                <span class="g-label">P99 首 token 延迟</span>
+                <span class="g-val" data-val="1.24">1.24<span class="u">s</span></span>
+                <span class="g-bar"><i style="width:62%"></i></span>
+                <span class="g-note">SLO 目标 1.5s · 达标</span>
+              </div>
+              <div class="gauge">
+                <span class="g-label">吞吐</span>
+                <span class="g-val" data-val="48.6">48.6<span class="u">k tok/s</span></span>
+                <span class="g-bar"><i style="width:74%"></i></span>
+                <span class="g-note">跨 12 个推理集群合计</span>
+              </div>
+              <div class="gauge">
+                <span class="g-label">30D 可用性</span>
+                <span class="g-val ok" data-val="99.97">99.97<span class="u">%</span></span>
+                <span class="g-bar"><i class="ok" style="width:99.97%"></i></span>
+                <span class="g-note">SLO 99.90% · 超出目标</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右侧：为什么做 LLM SRE -->
+        <div class="panel">
+          <div class="p-head">
+            <span class="t">WHY&nbsp;LLM&nbsp;SRE</span>
+          </div>
+          <div style="padding:20px 22px;display:flex;flex-direction:column;gap:16px;justify-content:center">
+            <div style="display:flex;gap:14px;align-items:flex-start">
+              <span class="mono" style="color:var(--accent);font-size:20px;line-height:1;padding-top:2px">01</span>
+              <p style="font-size:14px;color:var(--text);line-height:1.7">推理失败不是二元的。一次慢响应、一段截断输出、一次排队超时，用户的体感各不相同——<strong style="color:#fff">SLO 必须分维度定义</strong>。</p>
+            </div>
+            <div style="display:flex;gap:14px;align-items:flex-start">
+              <span class="mono" style="color:var(--accent);font-size:20px;line-height:1;padding-top:2px">02</span>
+              <p style="font-size:14px;color:var(--text);line-height:1.7">GPU 是昂贵而共享的资源。容量、弹性与降级，直接决定<strong style="color:#fff">单位 token 的成本</strong>与平台口碑。</p>
+            </div>
+            <div style="display:flex;gap:14px;align-items:flex-start">
+              <span class="mono" style="color:var(--accent);font-size:20px;line-height:1;padding-top:2px">03</span>
+              <p style="font-size:14px;color:var(--text);line-height:1.7">一次事故的代价远超重启：<strong style="color:#fff">复盘、演练与流程</strong>，是把失败变成资产的方式。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 指标带 -->
+    <div class="strip">
+      <div class="container in">
+        <div class="item"><span class="k">CLUSTERS ONLINE</span><span class="v">12<span class="u">/12</span></span></div>
+        <div class="item"><span class="k">MODEL SERVICES</span><span class="v">34</span></div>
+        <div class="item"><span class="k">MTTD 平均发现</span><span class="v">4.2<span class="u">m</span></span></div>
+        <div class="item"><span class="k">MTTR 平均恢复</span><span class="v">26<span class="u">m</span></span></div>
+        <div class="item"><span class="k">INCIDENTS / 周</span><span class="v">1</span></div>
+        <div class="item"><span class="k">ON-CALL 轮换</span><span class="v">已就绪</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 专题 -->
+  <section id="playbooks">
+    <div class="container">
+      <div class="sec-head">
+        <span class="no">01</span>
+        <h2>专题 · Playbooks</h2>
+        <span class="en">RELIABILITY PLAYBOOKS</span>
+      </div>
+      <div class="play-grid" id="playGrid">
+        <div class="pcard" data-filter="error-budget">
+          <div class="top"><span class="num">01</span><span class="tag">SLO</span></div>
+          <h3>错误预算</h3>
+          <p>用数学管理可靠性：SLO 定义、滚动窗口、燃烧率与告警阈值设计。</p>
+          <div class="foot"><span class="cnt">8 篇文章</span><span class="arrow">→</span></div>
+        </div>
+        <div class="pcard" data-filter="alerting">
+          <div class="top"><span class="num">02</span><span class="tag">ALERTING</span></div>
+          <h3>告警治理</h3>
+          <p>从阈值噪音到可行动信号：告警编排、去重、分诊与 on-call 流程。</p>
+          <div class="foot"><span class="cnt">6 篇文章</span><span class="arrow">→</span></div>
+        </div>
+        <div class="pcard" data-filter="capacity">
+          <div class="top"><span class="num">03</span><span class="tag">CAPACITY</span></div>
+          <h3>容量规划</h3>
+          <p>从吞吐公式到 GPU 排期：让容量跟着业务走，而不是跟着猜测走。</p>
+          <div class="foot"><span class="cnt">5 篇文章</span><span class="arrow">→</span></div>
+        </div>
+        <div class="pcard" data-filter="observability">
+          <div class="top"><span class="num">04</span><span class="tag">OBSERVABILITY</span></div>
+          <h3>可观测性</h3>
+          <p>指标、链路、样本：构建大模型服务的三维观测体系。</p>
+          <div class="foot"><span class="cnt">9 篇文章</span><span class="arrow">→</span></div>
+        </div>
+        <div class="pcard" data-filter="incident">
+          <div class="top"><span class="num">05</span><span class="tag">INCIDENT</span></div>
+          <h3>事故复盘</h3>
+          <p>每一次中断都留下可复用的知识：时间线、根因与改进项闭环。</p>
+          <div class="foot"><span class="cnt">7 篇文章</span><span class="arrow">→</span></div>
+        </div>
+        <div class="pcard" data-filter="ha">
+          <div class="top"><span class="num">06</span><span class="tag">H.A.</span></div>
+          <h3>高可用设计</h3>
+          <p>降级矩阵、多活与兜底的艺术：让服务在部分失败时仍然可用。</p>
+          <div class="foot"><span class="cnt">4 篇文章</span><span class="arrow">→</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 文章 -->
+  <section id="articles">
+    <div class="container">
+      <div class="sec-head">
+        <span class="no">02</span>
+        <h2>最新文章</h2>
+        <span class="en">FIELD NOTES &amp; POSTMORTEMS</span>
+      </div>
+      <div class="filter-bar" id="filterBar">
+        <button class="f on" data-f="all">全部</button>
+        <button class="f" data-f="slo">SLO</button>
+        <button class="f" data-f="alerting">告警</button>
+        <button class="f" data-f="capacity">容量</button>
+        <button class="f" data-f="observability">可观测</button>
+        <button class="f" data-f="incident">复盘</button>
+        <button class="f" data-f="ha">高可用</button>
+        <button class="f" data-f="perf">性能</button>
+        <span class="all-count" id="artCount">8 篇</span>
+      </div>
+      <div class="art-list" id="artList"><!-- 由 JS 渲染 --></div>
+    </div>
+  </section>
+
+  <!-- 体系 -->
+  <section id="system">
+    <div class="container">
+      <div class="sec-head">
+        <span class="no">03</span>
+        <h2>知识体系</h2>
+        <span class="en">LLM SERVING RELIABILITY MAP</span>
+      </div>
+      <div class="sys-wrap">
+        <div class="arch">
+          <div class="layer">
+            <div class="l-top"><span class="l-dot"></span><h4>接入层</h4><span class="l-en">INGRESS</span></div>
+            <div class="chips"><span class="chip">API 网关</span><span class="chip">路由与亲和性</span><span class="chip">鉴权</span><span class="chip">限流与配额</span><span class="chip">超时策略</span></div>
+          </div>
+          <div class="layer">
+            <div class="l-top"><span class="l-dot"></span><h4>推理层</h4><span class="l-en">INFERENCE</span></div>
+            <div class="chips"><span class="chip">调度器</span><span class="chip">Prefill / Decode</span><span class="chip">连续批处理</span><span class="chip">KV Cache</span><span class="chip">投机解码</span></div>
+          </div>
+          <div class="layer">
+            <div class="l-top"><span class="l-dot"></span><h4>资源层</h4><span class="l-en">GPU &amp; STORAGE</span></div>
+            <div class="chips"><span class="chip">GPU 集群</span><span class="chip">显存管理</span><span class="chip">权重存储</span><span class="chip">跨机网络</span></div>
+          </div>
+          <div class="layer">
+            <div class="l-top"><span class="l-dot"></span><h4>数据层</h4><span class="l-en">WEIGHTS &amp; CACHE</span></div>
+            <div class="chips"><span class="chip">模型权重</span><span class="chip">LoRA 适配器</span><span class="chip">Prompt 缓存</span><span class="chip">样本回放</span></div>
+          </div>
+        </div>
+        <div class="ctl">
+          <span class="c-title">// 控制面 · CONTROL PLANE</span>
+          <div class="c-item"><span class="i">SLO 目标</span><span class="d">可用性 × 延迟 × 完整率</span></div>
+          <div class="c-item"><span class="i">错误预算</span><span class="d">窗口滚动 · 燃烧率告警</span></div>
+          <div class="c-item"><span class="i">容量规划</span><span class="d">吞吐模型 · 峰值缓冲</span></div>
+          <div class="c-item"><span class="i">告警编排</span><span class="d">分诊 · 升级 · 抑制</span></div>
+          <div class="c-item"><span class="i">混沌演练</span><span class="d">故障注入 · 降级验证</span></div>
+          <div class="c-item"><span class="i">复盘闭环</span><span class="d">时间线 · 根因 · 行动项</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 订阅 -->
+  <section class="cta" id="subscribe">
+    <div class="container">
+      <div class="cta-box">
+        <h2>订阅站内更新</h2>
+        <p>新文章、复盘与实战手册发布时，一封邮件直达。不刷存在感，每月最多两封。</p>
+        <form class="sub-form" id="subForm">
+          <input type="email" id="subEmail" placeholder="you@company.com" aria-label="邮箱地址" required>
+          <button class="btn primary" type="submit">订阅</button>
+        </form>
+        <div class="cta-ops">
+          <span><span class="ok-dot"></span>RSS 已提供</span>
+          <span><span class="ok-dot"></span>支持邮件退订</span>
+          <span><span class="ok-dot"></span>内容均为实战经验</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ===== 文章视图 ===== -->
+<div id="view-article" class="hidden">
+  <div class="container">
+    <article class="article" id="articleWrap">
+      <button class="art-back" id="backBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        返回首页
+      </button>
+      <div id="articleBody"><!-- 由 JS 渲染 --></div>
+    </article>
+  </div>
+</div>
+
+<!-- ===== Footer ===== -->
+<footer>
+  <div class="container in">
+    <a href="#/" class="brand"><span class="dot"></span>llm-sre<em>.cc.cd</em></a>
+    <div class="links">
+      <a href="#playbooks">专题</a>
+      <a href="#articles">文章</a>
+      <a href="#system">体系</a>
+      <a href="#subscribe">订阅</a>
+    </div>
+    <span class="copy">© 2026 llm-sre · built for reliability · <span id="year"></span></span>
+  </div>
+</footer>
+
+<div id="toast" role="status"></div>
+
+<script>
+/* ============================================================
+   数据层（演示数据，正式内容将替换为真实发布内容）
+   ============================================================ */
+const CATS = {
+  slo:{label:'SLO',color:'#45D6C0'},
+  alerting:{label:'告警',color:'#E5A94E'},
+  capacity:{label:'容量',color:'#7EC8E3'},
+  observability:{label:'可观测',color:'#93A2B4'},
+  incident:{label:'复盘',color:'#E46A6A'},
+  ha:{label:'高可用',color:'#3FBF7F'},
+  perf:{label:'性能',color:'#8B7EE3'}
+};
+const ARTICLE_BODIES = {
+1:{intro:'可用性 99.9% 对传统 API 或许够用，但推理服务的失败体验是连续性的：一次超时返回 503，用户还能重试；而排队变长、响应变慢、输出截断，会让整个产品“变笨”。错误预算把“允许出错的量”显式化，让可靠性从口号变成可计算的约束。',sections:[
+{t:'为什么推理服务需要错误预算',p:['传统 API 的失败是离散的：一次 5xx、一次超时，重试即可。推理服务的失败是一条连续谱——慢响应、截断输出、排队超时、降级内容，用户感知从“坏了”到“变笨了”，中间没有清晰的二值边界。','没有预算的团队通常会走向两个极端：要么没有告警，事故靠用户发现；要么阈值拍脑袋，告警风暴把 on-call 打疲劳。错误预算给团队一个共同语言：这个月我们还能烧掉多少可靠性。']},
+{t:'定义服务级 SLO',p:['定义 SLO 前先回答三个口径问题：按请求还是按 token 计？什么算“成功”——完整输出、首 token 及时，还是两者都要？窗口取多长？口径不一致，再精确的告警也是空中楼阁。','建议从三个维度起步，各自独立计预算：','<b>可用性</b>：请求级成功率（非 5xx、非限流丢弃）≥ 99.9%；<b>延迟</b>：TTFT p99 ≤ 1.5s、TPOT p95 ≤ 120ms；<b>完整率</b>：完成请求中 token 完整生成的占比 ≥ 99.5%。','关键认知：SLO 不是越高越好，它是产品体验与成本的對价。99.9% 提到 99.95%，常常意味着容量翻倍。']},
+{t:'窗口、预算与燃烧率',p:['预算 = (1 − SLO) × 窗口长度。30 天窗口、99.9% 的 SLO，意味着每个月只有 43.2 分钟的错误配额。配额花完，就该暂停发布、投入稳定性工作，而不是继续硬扛。'],formula:'燃烧率 = 观测错误率 ÷ (1 − SLO) · 1× 表示刚好在窗口内耗尽预算，14.4× 表示 2 周耗尽，144× 表示 1 天耗尽。'},
+{t:'告警阈值：从预算到分诊',p:['只看瞬时错误率的告警有两个缺陷：高峰流量下误报，低峰时段漏报。社区验证过的模式是多窗口燃烧告警——不同时间尺度的窗口，捕捉不同速度的烧钱：','<b>1h / 14.4×</b> → 立即 pager。预算按 2 周耗尽的速度燃烧，注定出问题；<b>6h / 6×</b> → pager。5 天耗尽，通常是发布或依赖故障；<b>3d / 1×</b> → ticket。预算正被匀速吃掉，多半是容量或配置问题。','把燃烧速度对应到分诊路径，on-call 第一次接警就知道往哪查，而不是重新推理一遍。']},
+{t:'可落地的配置示例',p:['以 Prometheus 为例，用 <code>rate()</code> 在多个窗口计算观测错误率，再除以错误预算比例（1 − SLO），就得到实时燃烧率。下面是一组可直接套用的多窗口规则。'],code:{file:'prometheus · alerting-rules.yaml',lang:'yaml',body:`groups:
+  - name: llm-inference-error-budget
+    rules:
+      # 快速燃烧：1h 窗口 × 14.4 —— 预算将在 2 周内耗尽
+      - alert: ErrorBudgetBurnFast
+        expr: |
+          sum(rate(http_requests_total{status=~"5..|429"}[1h]))
+            / sum(rate(http_requests_total[1h]))
+            / (1 - 0.999) > 14.4
+        for: 5m
+        labels: { severity: page }
+      # 中速燃烧：6h 窗口 × 6 —— 预算将在 5 天内耗尽
+      - alert: ErrorBudgetBurnMedium
+        expr: |
+          sum(rate(http_requests_total{status=~"5..|429"}[6h]))
+            / sum(rate(http_requests_total[6h]))
+            / (1 - 0.999) > 6
+        for: 15m
+        labels: { severity: page }
+      # 慢速燃烧：3d 窗口 × 1 —— 预算按耗尽速度匀速消耗
+      - alert: ErrorBudgetBurnSlow
+        expr: |
+          sum(rate(http_requests_total{status=~"5..|429"}[3d]))
+            / sum(rate(http_requests_total[3d]))
+            / (1 - 0.999) > 1
+        for: 1h
+        labels: { severity: ticket }`}},
+{t:'写在最后',p:['预算消耗不是失败，它是决策信号：该扩容、该修依赖、该暂停发布。把错误预算接入容量规划和发布门禁，燃烧率写进每一次事故复盘的模板——SLO 就从墙上的一句话，变成了团队每天都在用的仪表盘。']}
+]},
+2:{intro:'一次 P99 延迟从 0.9s 爬升到 2.1s，流量没变、错误率没变。这是一次典型的“慢故障”——没有告警触发，只有用户体验在流血。',sections:[
+{t:'现象',p:['连续两周，TTFT p99 缓慢爬升。指标正常，错误率稳定在 0.02%，没有任何 5xx。第一个发现问题的不是监控，而是线上反馈群里的截图。']},
+{t:'假设与排除',p:['先做减法：把影响面收窄到引擎层。排除网络（跨机带宽正常）、排除模型加载（无版本变更）、排除流量（qps 持平）之后，剩下的嫌疑集中在调度器与 KV Cache 上。']},
+{t:'根因',p:['压力测试复现后定位：新上线的投机解码策略在长上下文请求下触发更频繁的 cache 重算，decoder 的 batch 等待链变长。p50 没动，p99 被长尾拖垮。']},
+{t:'修复与验证',p:['回滚投机解码并拆分开关后，p99 在 40 分钟内回落至 0.95s。验证结论写成了新的性能基准条目：任何影响调度策略的变更，必须带上长上下文混合负载的压测。']}
+]},
+3:{intro:'凌晨 2:14，监控显示一个 8 卡推理集群整体掉线。对外的表现是：请求排队超过 30 秒，随后大面积 503。',sections:[
+{t:'事件时间线',p:['02:14 集群告警触发；02:19 值班确认是节点级故障而非网络抖动；02:32 定位到单卡 ECC 错误累积导致整机下线；02:51 流量切换至备用集群；03:20 完成故障卡隔离，集群重新上线。总影响时长约 66 分钟。']},
+{t:'根因',p:['单卡显存 ECC 错误在数小时内累积，超过阈值后整机自动下线。这台机器已连续运行 41 天，此前无任何预警巡检。故障域隔离设计的缺口：8 卡共用一个失效域，一次硬件故障拖走整个集群。']},
+{t:'改进项',p:['三个行动项在两周内闭环：GPU ECC 错误率纳入每日巡检与预警告警；推理集群按“4+4 双失效域”重新分组；为多集群入口增加 30 秒超时的自动切换演练，每月一次。']}
+]},
+4:{intro:'GPU 是平台最大的成本项。容量规划的起点不是“感觉要扩容了”，而是先把吞吐算清楚。',sections:[
+{t:'吞吐公式',p:['推理吞吐的核心变量是：batch 大小、序列长度、显存占用与 prefill/decode 的配比。一个实用近似：吞吐 ≈ 单卡显存可容纳的并发序列数 × 每序列每秒 token 数。KV Cache 决定了第一项，模型与硬件决定第二项。']},
+{t:'实测基准',p:['公式只给量级，决策必须靠实测。建议每个季度跑一组固定负载的基准：p50/p99 延迟、峰值吞吐、显存峰值，并记录 batch 与序列长度的对应矩阵。没有基准的容量规划，本质上是掷骰子。']},
+{t:'排期建议',p:['把预测与采购解耦：按 90 天滚动预测 GPU 需求，采购窗口对齐 60 天；给每个模型服务保留 20% 峰值缓冲；把弹性扩缩容做成默认能力，而不是事故后的补救。']}
+]},
+5:{intro:'指标告诉你“坏了”，链路告诉你“哪一环坏了”，样本告诉你“为什么”。三者缺一，可观测性就只是图表收藏。',sections:[
+{t:'指标',p:['请求级 RED 指标是底线：每秒请求、错误率、延迟分布。推理场景还要加上引擎内部量：排队长度、批大小、KV Cache 命中率、prefill/decode 时长拆分。指标要能按模型、版本、租户三个维度切分。']},
+{t:'链路',p:['传统链路只覆盖网关到引擎。LLM 场景要把 token 级进度纳入追踪：首 token 时间、每 token 间延迟、生成是否中断。把“一段输出”当成一次事务来跟踪，才能定位慢在哪。']},
+{t:'样本',p:['指标和链路都是聚合，丢失了个体体验。按错误率与延迟分位数有偏采样真实请求样本，附上输入输出与引擎日志，复盘时直接回放，而不是靠猜。']}
+]},
+6:{intro:'高可用的本质不是“永远不挂”，而是“挂了也不影响可用性”。降级矩阵把失败模式逐一对应到兜底策略。',sections:[
+{t:'失败模式',p:['LLM 服务的典型失败模式：单集群离线、队列堆积、显存不足导致 OOM、上游权重加载慢、缓存击穿。每种模式的影响半径不同，需要不同的降级策略。']},
+{t:'降级策略',p:['按影响从轻到重排列：限流保护（拒绝新请求、保留存量）；排队等待（设置最大等待时长，超时即失败）；模型降级（切到小模型或低质量档）；缓存兜底（命中历史答案）；多活切换（流量整体切走）。策略必须可独立开关、可灰度验证。']},
+{t:'验证',p:['降级矩阵不演练等于没有。每月一次混沌演练：随机注入“单集群离线”“显存耗尽”“权重服务慢”三种故障，检查降级路径是否按矩阵生效，记录切换耗时。']}
+]},
+7:{intro:'LoRA 多租户在同一个 GPU 上共享 base 模型，省的是显存，复杂的是调度。',sections:[
+{t:'场景',p:['几十个 LoRA 适配器共享一台 8 卡机器。热度的不均匀让调度器频繁切换适配器加载，切换期间请求全部阻塞——这是典型的“共享资源上的长尾放大器”。']},
+{t:'权衡',p:['缓存策略（热适配器常驻）与调度策略（按亲和性分批）之间存在置换。常驻越多，切换越少，但可服务租户越少。没有银弹，只能用租户热度曲线做优化。']},
+{t:'建议',p:['为适配器建立热度分档，热档常驻、冷档按需加载；把“加载耗时”纳入 SLO 的排队口径；租户隔离级别按 SLA 分档，高优租户独享适配器槽位。']}
+]},
+8:{intro:'一份能救命的 on-call 手册，不是告警清单，而是“看到告警后 5 分钟内的分诊路径”。',sections:[
+{t:'九种典型告警',p:['显存 OOM 将满、队列深度超阈值、TTFT p99 越线、引擎进程崩溃、GPU ECC 错误、权重加载超时、租户配额击穿、批量切换失败、多集群健康度下降。每种告警都对应一个固定的首查路径：查什么面板、跑哪条命令、找哪个团队。']},
+{t:'分诊流程',p:['接警后按固定顺序做三件事：确认影响面（多少用户、多少流量）→ 判断类型（快烧/慢烧/突发）→ 执行首查路径。十分钟内无法定位，立即升级，不独自硬扛。复盘时，把“当时缺什么信息”写成手册补丁。']}
+]}
+};
+const ARTICLES = [
+{id:1,cat:'slo',title:'LLM 推理服务的错误预算设计：从 SLO 到告警阈值',sum:'用数学管理可靠性：三要素定义、滚动窗口、燃烧率公式，以及一套可直接套用的多窗口告警规则。',date:'2026-10-12',read:'12 分钟',flag:'NEW',dot:'#3FBF7F'},
+{id:2,cat:'perf',title:'vLLM 集群 P99 延迟治理：一次系统化归因',sum:'慢故障比崩溃更难发现。一次投机解码引发的长尾问题，从假设、排除到复现的完整路径。',date:'2026-09-28',read:'9 分钟',flag:'',dot:'#8B7EE3'},
+{id:3,cat:'incident',title:'复盘：一次 GPU 故障引发的 8 卡推理中断',sum:'ECC 错误累积、失效域缺口、流量切换延迟。一次凌晨事故的完整时间线与三项改进。',date:'2026-09-15',read:'15 分钟',flag:'复盘',dot:'#E46A6A'},
+{id:4,cat:'capacity',title:'Token 吞吐容量规划：从公式到实测基准',sum:'吞吐 ≈ 并发序列数 × 每序列速率。把 GPU 扩容从感觉变成 90 天滚动预测。',date:'2026-08-30',read:'11 分钟',flag:'',dot:'#7EC8E3'},
+{id:5,cat:'observability',title:'大模型可观测性三件套：指标、链路与样本',sum:'指标告诉你坏了，链路告诉你哪一环坏了，样本告诉你为什么。三者缺一不可。',date:'2026-08-12',read:'10 分钟',flag:'',dot:'#93A2B4'},
+{id:6,cat:'ha',title:'推理服务的降级矩阵：限流、排队与缓存兜底',sum:'高可用不是永远不挂，而是挂了也不影响可用性。五种降级策略与每月混沌演练。',date:'2026-07-22',read:'8 分钟',flag:'',dot:'#3FBF7F'},
+{id:7,cat:'capacity',title:'LoRA 多租户调度的可靠性权衡',sum:'共享 base 模型的显存经济学：适配器缓存、调度亲和性与租户隔离分档。',date:'2026-07-05',read:'7 分钟',flag:'',dot:'#7EC8E3'},
+{id:8,cat:'alerting',title:'On-call 手册：LLM 服务的九种典型告警',sum:'告警清单不是手册，分诊路径才是。接警后五分钟内的固定动作序列。',date:'2026-06-18',read:'13 分钟',flag:'',dot:'#E5A94E'}
+];
+
+/* ============================================================
+   渲染：文章列表
+   ============================================================ */
+const artListEl = document.getElementById('artList');
+const artCountEl = document.getElementById('artCount');
+let curFilter = 'all';
+
+function renderArtList(){
+  const list = curFilter==='all' ? ARTICLES : ARTICLES.filter(a=>a.cat===curFilter);
+  artCountEl.textContent = list.length + ' 篇';
+  if(!list.length){
+    artListEl.innerHTML = '<div class="empty-tip">该分类下暂无文章 · 正在撰写中</div>';
+    return;
+  }
+  artListEl.innerHTML = list.map(a=>{
+    const c = CATS[a.cat];
+    return `<div class="art-card" data-id="${a.id}" tabindex="0" role="link" aria-label="${a.title}">
+      <div class="ameta"><span class="dot" style="background:${a.dot}"></span>
+        <span class="cls">${c.label}</span>${a.flag?`<span class="flag">${a.flag}</span>`:''}</div>
+      <h3>${a.title}</h3>
+      <p>${a.sum}</p>
+      <div class="afoot"><time>${a.date}</time><span class="read">${a.read}</span>
+        <span class="more">阅读 →</span></div>
+    </div>`;
+  }).join('');
+}
+
+/* ============================================================
+   渲染：文章详情
+   ============================================================ */
+const articleBodyEl = document.getElementById('articleBody');
+
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function codeRender(body){
+  // 顺序关键：先转义 → 内容级包裹（引号/数字）→ 再行级包裹（注释/关键字），
+  // 否则类名里的引号会被二次包裹破坏标签结构
+  let html = body.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  html = html.replace(/"([^"]*)"/g,'<span class="tok-s">"$1"</span>');
+  html = html.replace(/(\d+\.\d+|\b\d{1,3}x\b|\b\d+[smh]\b)/g,'<span class="tok-n">$1</span>');
+  html = html.replace(/# ([^\n]*)/g,'<span class="tok-c"># $1</span>');
+  html = html.replace(/(- alert: \w+)/g,'<span class="tok-k">$1</span>');
+  html = html.replace(/(expr:|for:|labels:|annotations:|summary:|severity:)/g,'<span class="tok-m">$1</span>');
+  return html;
+}
+function renderArticle(id){
+  const a = ARTICLES.find(x=>x.id===id);
+  if(!a){ location.hash = '#/'; return; }
+  const c = CATS[a.cat];
+  const body = ARTICLE_BODIES[id] || ARTICLE_BODIES[1];
+  const html = `<p class="kicker">// ${c.label.toUpperCase()} · FIELD NOTE</p>
+    <h1>${a.title}</h1>
+    <div class="ameta"><span class="dot"></span><span>${a.date}</span><span>${a.read}</span>
+      <span style="color:var(--cyan)">#${a.cat}</span></div>
+    <p class="summary"><span class="lead">${esc(body.intro)}</span></p>
+    <div class="art-body">
+      <aside class="toc"><div class="toc-t">目录 / CONTENTS</div>
+        ${body.sections.map((s,i)=>`<a href="#art-s${i}" data-toc="${i}">${s.t}</a>`).join('')}
+      </aside>
+      <div class="content">${body.sections.map((s,i)=>secHtml(s,i)).join('')}
+        ${relatedHtml(id)}
+      </div>
+    </div>`;
+  articleBodyEl.innerHTML = html;
+  document.title = a.title + ' — LLM SRE';
+  bindToc();
+  bindRelated();
+}
+function secHtml(s,i){
+  let h = `<h2 id="art-s${i}"><span class="n">0${i+1}</span>${s.t}</h2>`;
+  if(s.p) h += s.p.map(p=>`<p>${inline(p)}</p>`).join('');
+  if(s.formula) h += `<div class="formula"><span class="eq">${esc(s.formula)}</span></div>`;
+  if(s.code){
+    const meta = s.code.file.split(' · ');
+    h += `<div class="code-block"><div class="cb-head">
+      <span class="dot"></span><span class="fname">${meta[0]||s.code.file}</span><span>${meta[1]||''}</span></div>
+      <pre>${codeRender(s.code.body)}</pre></div>`;
+  }
+  return h;
+}
+function inline(p){
+  return p.replace(/<b>(.*?)<\/b>/g,'<strong>$1</strong>')
+          .replace(/<code>(.*?)<\/code>/g,'<span class="mono" style="color:var(--cyan);font-size:.9em">$1</span>');
+}
+function relatedHtml(curId){
+  const rel = ARTICLES.filter(x=>x.id!==curId).slice(0,3);
+  return `<div class="related"><h3>继续阅读</h3><div class="art-list">${rel.map(a=>{
+    const c=CATS[a.cat];
+    return `<div class="art-card" data-id="${a.id}" tabindex="0" role="link">
+      <div class="ameta"><span class="dot" style="background:${a.dot}"></span><span class="cls">${c.label}</span></div>
+      <h3>${a.title}</h3>
+      <p>${a.sum}</p>
+      <div class="afoot"><time>${a.date}</time><span class="read">${a.read}</span></div>
+    </div>`;
+  }).join('')}</div></div>`;
+}
+function bindRelated(){
+  articleBodyEl.querySelectorAll('.related .art-card').forEach(card=>{
+    card.addEventListener('click',()=>location.hash='#/article/'+card.dataset.id);
+    card.addEventListener('keydown',e=>{if(e.key==='Enter')location.hash='#/article/'+card.dataset.id});
+  });
+}
+function bindToc(){
+  const tocLinks = articleBodyEl.querySelectorAll('.toc a');
+  const heads = articleBodyEl.querySelectorAll('.content h2');
+  tocLinks.forEach(a=>a.addEventListener('click',e=>{
+    e.preventDefault();
+    tocLinks.forEach(x=>x.classList.remove('on')); a.classList.add('on');
+    const t = document.getElementById('art-s'+a.dataset.toc);
+    if(t) t.scrollIntoView({behavior:'smooth'});
+  }));
+  const spy = new IntersectionObserver(entries=>{
+    entries.forEach(en=>{
+      if(en.isIntersecting){
+        const idx = [...heads].indexOf(en.target);
+        tocLinks.forEach(x=>x.classList.toggle('on',+x.dataset.toc===idx));
+      }
+    });
+  },{rootMargin:'-30% 0px -60% 0px'});
+  heads.forEach(h=>spy.observe(h));
+}
+
+/* ============================================================
+   路由：hash
+   ============================================================ */
+const viewHome = document.getElementById('view-home');
+const viewArticle = document.getElementById('view-article');
+const navLinks = document.querySelectorAll('[data-nav]');
+
+function route(){
+  const h = location.hash || '#/';
+  if(h.startsWith('#/article/')){
+    const id = parseInt(h.split('/')[2]);
+    viewHome.classList.add('hidden');
+    viewArticle.classList.remove('hidden');
+    navLinks.forEach(a=>a.classList.toggle('active',a.dataset.nav==='home'));
+    renderArticle(id);
+    document.getElementById('mobileMenu').classList.remove('open');
+    return;
+  }
+  // 首页
+  viewArticle.classList.add('hidden');
+  viewHome.classList.remove('hidden');
+  const key = h.replace('#/','').replace('#','') || 'home';
+  if(key==='home'){
+    window.scrollTo(0,0);
+    navLinks.forEach(a=>a.classList.toggle('active',a.dataset.nav==='home'));
+  }else{
+    const el = document.querySelector('#'+key);
+    if(el){
+      el.scrollIntoView({behavior:'smooth'});
+      navLinks.forEach(a=>a.classList.toggle('active',a.dataset.nav===key));
+    }
+  }
+  document.getElementById('mobileMenu').classList.remove('open');
+  document.getElementById('burgerBtn').setAttribute('aria-expanded','false');
+}
+window.addEventListener('hashchange',route);
+
+/* 首页滚动侦测导航高亮 */
+const secMap = ['home','playbooks','articles','system'];
+const spyHome = new IntersectionObserver(entries=>{
+  entries.forEach(en=>{
+    if(en.isIntersecting){
+      const id = en.target.id || 'home';
+      navLinks.forEach(a=>a.classList.toggle('active',a.dataset.nav===id));
+    }
+  });
+},{rootMargin:'-45% 0px -50% 0px'});
+['playbooks','articles','system'].forEach(id=>spyHome.observe(document.getElementById(id)));
+
+/* ============================================================
+   交互
+   ============================================================ */
+// 顶栏
+const burgerBtn = document.getElementById('burgerBtn');
+const mobileMenu = document.getElementById('mobileMenu');
+burgerBtn.addEventListener('click',()=>{
+  const open = mobileMenu.classList.toggle('open');
+  burgerBtn.setAttribute('aria-expanded',open?'true':'false');
+  mobileMenu.style.display = open?'block':'none';
+});
+navLinks.forEach(a=>a.addEventListener('click',()=>{
+  mobileMenu.style.display='none';
+  burgerBtn.setAttribute('aria-expanded','false');
+}));
+
+// 文章列表筛选
+document.getElementById('filterBar').addEventListener('click',e=>{
+  const btn = e.target.closest('.f');
+  if(!btn) return;
+  document.querySelectorAll('.f').forEach(x=>x.classList.remove('on'));
+  btn.classList.add('on');
+  curFilter = btn.dataset.f;
+  renderArtList();
+});
+// 专题卡 → 联动筛选
+document.getElementById('playGrid').addEventListener('click',e=>{
+  const card = e.target.closest('.pcard');
+  if(!card) return;
+  const f = card.dataset.filter;
+  document.querySelectorAll('.f').forEach(x=>x.classList.toggle('on',x.dataset.f===f));
+  curFilter = f;
+  renderArtList();
+  document.getElementById('articles').scrollIntoView({behavior:'smooth'});
+});
+// 文章卡点击
+artListEl.addEventListener('click',e=>{
+  const card = e.target.closest('.art-card');
+  if(card) location.hash = '#/article/'+card.dataset.id;
+});
+artListEl.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){
+    const card = e.target.closest('.art-card');
+    if(card) location.hash = '#/article/'+card.dataset.id;
+  }
+});
+document.getElementById('backBtn').addEventListener('click',()=>location.hash='#/');
+
+// 订阅
+document.getElementById('subForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const email = document.getElementById('subEmail');
+  if(!email.value || !email.value.includes('@')){
+    toast('邮箱格式不正确',false); return;
+  }
+  toast('已加入订阅队列 · 设计演示',true);
+  email.value='';
+});
+function toast(msg,ok){
+  const t = document.getElementById('toast');
+  t.innerHTML = ok?`<span class="ok">✓</span> ${msg}`:msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+/* ============================================================
+   Hero 面板：ECharts 误差预算图
+   ============================================================ */
+function initChart(){
+  const el = document.getElementById('budgetChart');
+  if(!el) return;
+  if(typeof echarts==='undefined'){
+    el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-family:var(--mono);font-size:12px;color:var(--text3)">图表组件加载中…</div>';
+    return;
+  }
+  const days = [];
+  const d = new Date(2026,8,26); // 2026-09-26
+  for(let i=0;i<30;i++){
+    const s = `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    days.push(s);
+    d.setDate(d.getDate()+1);
+  }
+  const rates = [0.012,0.015,0.013,0.018,0.021,0.016,0.014,0.019,0.022,0.017,0.015,0.02,0.016,0.018,0.023,0.019,0.017,0.021,0.016,0.014,0.018,0.21,0.09,0.045,0.028,0.022,0.019,0.017,0.015,0.014];
+  const chart = echarts.init(el, null, {renderer:'canvas'});
+  chart.setOption({
+    animationDuration:900,
+    grid:{left:44,right:14,top:26,bottom:26},
+    tooltip:{trigger:'axis',confine:true,backgroundColor:'#141D27',borderColor:'#2C3E50',textStyle:{color:'#DCE4EE',fontFamily:'IBM Plex Mono,monospace',fontSize:11},axisPointer:{type:'line',lineStyle:{color:'#2C3E50'}}},
+    xAxis:{type:'category',data:days,axisLine:{lineStyle:{color:'#2C3E50'}},axisTick:{show:false},axisLabel:{color:'#5E7187',fontFamily:'IBM Plex Mono,monospace',fontSize:10,interval:4}},
+    yAxis:{type:'value',name:'错误率 %',nameTextStyle:{color:'#5E7187',fontSize:10},axisLabel:{color:'#5E7187',fontFamily:'IBM Plex Mono,monospace',fontSize:10,formatter:v=>v.toFixed(2)},splitLine:{lineStyle:{color:'#18232F'}},max:0.25},
+    series:[{
+      type:'line',data:rates,smooth:true,symbol:'circle',symbolSize:4,
+      lineStyle:{color:'#45D6C0',width:1.6},
+      itemStyle:{color:'#45D6C0'},
+      areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(69,214,192,.22)'},{offset:1,color:'rgba(69,214,192,0)'}]}},
+      markLine:{symbol:'none',silent:true,data:[{yAxis:0.05,name:'SLO 0.05%'}],
+        lineStyle:{color:'#5E7187',type:'dashed',width:1},
+        label:{formatter:'SLO 上限 0.05%',color:'#93A2B4',fontSize:10,fontFamily:'IBM Plex Mono,monospace',position:'insideEndTop'}},
+      markPoint:{silent:true,data:[{coord:['10-08',0.21],name:'事故'}],
+        symbol:'pin',symbolSize:34,itemStyle:{color:'#E46A6A'},
+        label:{formatter:'事故 10-08',color:'#E46A6A',fontSize:10,fontFamily:'IBM Plex Mono,monospace',position:'top'}}
+    }]
+  });
+  let rt;
+  window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>chart.resize(),150)});
+}
+
+/* ============================================================
+   Hero 指标读数微动（演示“实时”感，克制）
+   ============================================================ */
+function jitterGauges(){
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const gLat = document.querySelector('.gauge:nth-child(2) .g-val');
+  const gTp  = document.querySelector('.gauge:nth-child(3) .g-val');
+  let lat=1.24, tp=48.6;
+  setInterval(()=>{
+    lat = +(Math.max(1.12,Math.min(1.42,lat+(Math.random()-0.5)*0.04))).toFixed(2);
+    tp  = +(Math.max(46.8,Math.min(50.4,tp+(Math.random()-0.5)*0.6))).toFixed(1);
+    gLat.innerHTML = `${lat}<span class="u">s</span>`;
+    gTp.innerHTML  = `${tp}<span class="u">k tok/s</span>`;
+  },4200);
+}
+
+/* ============================================================
+   启动
+   ============================================================ */
+document.getElementById('year').textContent = '2026';
+renderArtList();
+route();
+initChart();
+jitterGauges();
+</script>
+</body>
+</html>
